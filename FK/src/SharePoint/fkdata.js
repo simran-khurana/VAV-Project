@@ -7,9 +7,7 @@ xhttp.onreadystatechange = function() {
 	    myFunction(this);
     }
 };
-/* performSearch("https://evrydev.sharepoint.com/sites/vavdev/_api/Web/Lists/getbytitle('MigrateDoclibrary')/items?$select=FileRef, FileLeafRef, ID,FacilityName/ID,FacilityName/Title,FileFormat/ID,DocumentType/ID&$expand=FacilityName/ID,FileFormat/ID, DocumentType/ID&$filter=((FacilityName/ID eq '1') and (FileFormat/ID eq '1') and (DocumentType/ID eq '1') )", displayDocuments);
-getFacilityNames("https://evrydev.sharepoint.com/sites/vavdev/_api/Web/Lists/getbytitle('MigrateDoclibrary')/items?$select=FileRef, FileLeafRef, ID,FacilityName/ID,FacilityName/Title,FileFormat/ID,DocumentType/ID&$expand=FacilityName/ID,FileFormat/ID, DocumentType/ID&$filter=((FacilityName/ID eq '1') and (FileFormat/ID eq '1') and (DocumentType/ID eq '1') )", displayFacilities);
- */
+
 function performSearch(fullSearchUrl, successCallback)
 {
 	var myxhr = $.ajax({
@@ -78,9 +76,10 @@ function groupBy(items, propertyId, propertyValue)
     return result;
 }
 
+var docLink="https://evrydev.sharepoint.com/sites/vavdev/_layouts/15/WopiFrame.aspx?sourcedoc=%7B9CFEB957-E3FB-4C7F-8509-FA54A1D96DF4%7D&file=1.%20Samsvarserkl%C3%A6ring-test%20document4.docx&action=default";
 
-var linkString = "<a id=\"CallOutExample\" onclick=\"OpenItemFilePreviewCallOut(this, 'My Title','https://evrydev.sharepoint.com/sites/vavdev/_layouts/15/WopiFrame2.aspx?sourcedoc=/sites/vavdev/MigrateDoclibrary/1028template.docx', 66, '/sites/vavdev/MigrateDoclibrary/1028template.docx', '{98E4CF0C-AF45-4258-9CA7-E8FAA3585D2A}')\" title=\"CallOut With File Preview\" h ref=\"#\">Call Out with File Preview</a>";
-var replaceLinkString = "<a id=\"CallOutExample\" onclick=\"OpenItemFilePreviewCallOut(this, '_FileLeafRef_','https://evrydev.sharepoint.com/sites/vavdev/_layouts/15/WopiFrame2.aspx?sourcedoc=_FileRef_', {FileId}, '_FileRef_', '{ListGuid}')\" title=\"_FileLeafRef_\" h ref=\"#\">_FileLeafRef_</a>";
+var replaceLinkString = "<a id=\"CallOutExample\" href='/sites/vavdev/_layouts/15/WopiFrame.aspx?sourcedoc=/sites/vavdev/MigrateDoclibrary/_FileLeafRef_&action=default'  title=\"_FileLeafRef_\">_FileLeafRef_</a>";
+var calloutString = "<a class='dots' id=\"CallOutExample\" onclick=\"OpenItemFilePreviewCallOut(this, '_FileLeafRef_','"+FKSITEURL+"_layouts/15/WopiFrame2.aspx?sourcedoc=_FileRef_', {FileId}, '_FileRef_', '{ListGuid}')\" title=\"_FileLeafRef_\" href=\"#\">...</a>";
 
 var sotableResults="";
 
@@ -149,33 +148,30 @@ function myFunction(xml) {
 
 function displayDocuments(items)
 {
-	document.getElementById("stations").innerHTML = "";
-
+/* 	document.getElementById("stations").innerHTML = ""; */
+console.log(items.length);
 	for (var i = 0;i<items.length;i++)
 	{
-		document.getElementById("stations").innerHTML += replaceLinkString
+		
+		var calloutLink=calloutString
 		.replace(/_FileRef_/g,     items[i].FileRef)
 		.replace("{FileId}", items[i].Id)
 		.replace(/_FileLeafRef_/g, items[i].FileLeafRef)
 		.replace("{ListGuid}", FKLISTGUID);
-		
 		
 		var docLink=replaceLinkString
-		.replace(/_FileRef_/g,     items[i].FileRef)
-		.replace("{FileId}", items[i].Id)
-		.replace(/_FileLeafRef_/g, items[i].FileLeafRef)
-		.replace("{ListGuid}", FKLISTGUID);
-		//console.log(dt);
-		document.getElementById("stations").innerHTML += "<br/>";
+		.replace(/_FileLeafRef_/g, items[i].FileLeafRef);
+		
+		
 		var modifiedDate=new Date(items[i].ModifiedDate);
 		var mdt=modifiedDate.format("dd.MM.yyyy"); 
-		var rowHTML="<tr><td class='ms-cellstyle ms-vb-title' data-value='"+items[i].FileLeafRef+"'>"+docLink+"</td>"+
+		var rowHTML="<tr><td class='ms-cellstyle ms-vb-title' data-value='"+items[i].FileLeafRef+"'>"+docLink+calloutLink+
 					"<td class='ms-cellstyle ms-vb2' data-value='"+mdt+"'>"+mdt+"</td>"+
 					"<td class='ms-cellstyle ms-vb-user' data-value='"+items[i].ModifiedBy+"'>"+items[i].ModifiedBy+"</td>"+
-					"<td data-value='"+items[i].FacilityType+"'>"+items[i].FacilityType+"</td>"+
-					"<td data-value='"+items[i].DocumentType+"'>"+items[i].DocumentType+"</td>"+
-					"<td data-value='"+items[i].FileFormat+"'>"+items[i].FileFormat+"</td>"+ 
-		"<td data-value='"+items[i].FacilityName+"'>"+items[i].FacilityName+"</td></tr>";
+					"<td class='ms-vb-lastCell ms-cellstyle ms-vb2 ms-vb-lastCell doc-style' data-value='"+items[i].FacilityType+"'>"+items[i].FacilityType+"</td>"+
+					"<td class='ms-cellstyle ms-vb2 doc-style' data-value='"+items[i].DocumentType+"'>"+items[i].DocumentType+"</td>"+
+					"<td class='ms-cellstyle ms-vb2 doc-style' data-value='"+items[i].FileFormat+"'>"+items[i].FileFormat+"</td>"+ 
+					"<td class='ms-cellstyle ms-vb2 doc-style' data-value='"+items[i].FacilityName+"'>"+items[i].FacilityName+"</td></tr>";
 		$(".sortable tbody").append(rowHTML);
 		
 		
@@ -189,11 +185,12 @@ function displayFacilities(items)
 
 	for (var i = 0;i<items.length;i++)
 	{
-		document.getElementById("facilitites").innerHTML += "<input id='"+items[i]["propertyName"]+"' class='docfilter' onchange='docFilter()' type='checkbox' />" + items[i]["propertyValue"];
+		document.getElementById("facilitites").innerHTML += "<div class ='facility'><input id='"+items[i]["propertyName"]+"' class='docfilter' onchange='docFilter()' type='checkbox' /><span class ='facdisp'>" + items[i]["propertyValue"]+"</span></div>";
 		document.getElementById("facilitites").innerHTML += "<br/>";
 	}
+	
+		
 }
-
 
 
 
