@@ -3,7 +3,7 @@ div[class$="filterbox"]
 border-right:2px solid #000;
 margin-right: 20px;
 float: left;
-min-width: 175px;
+width: 204px !important;
 background-color: #DCDCDC;
 }
 
@@ -16,26 +16,29 @@ float:left;
 {
 margin-left: 10px; 
 margin-top: 10px;
+    margin-bottom: 8px;
 }
-.filters
+.filters,.docfilter
 {
-margin-left: 10px;
-margin-right:10px;
+margin-left: 10px !important;
+margin-right:10px !important;
+    margin-bottom: 5px !important;
 }
 
 #textbox
 {
-margin-bottom: 20px;
+
 margin-left:10px;
-width: 90px;
+width: 105px;
+height : 30px;
 }
 
 .button
 {
-border-radius: 5px;
+
 margin-right: 10px;
-margin-bottom: 20px;
-margin-left: 5px;
+
+margin-left: 0px;
 width: 43px;
 padding-top: 3px;
 padding-bottom: 3px;
@@ -47,28 +50,59 @@ clear:both;
 }
 #fk
 {
-display: inline-block;
+display: block;
 }
 #facilitites
 {
 clear:both;
+float: left !important;
+width :200px !important;
 }
 
-.sortable th
+.doccontainer 
 {
-max-width: 500px;
-    font-weight: normal;
-    font-size: 0.85em;
-    color: #777;
-    text-align: left;
-    text-decoration: none;
-    vertical-align: middle;
-    white-space: nowrap;
-	padding: 5px 17px 5px 5px;
-	display: table-cell;
+	display:none;
+	float:left;
+	width: 80%;
 }
-
-.sortable tr {
-	height: 30px; 
-	}
-
+.labelHead
+{
+float:left;
+min-height:275px;
+} 
+label
+{
+	margin-bottom: 0px !important;
+    font-size: 13px !important;
+    font-weight: normal !important;
+}
+.docfilter
+{
+	float:left !important;
+}
+.table-striped>tbody>tr:nth-child(odd)>td, .table-striped>tbody>tr:nth-child(odd)>th {
+    background-color: transparent !important;
+}
+.table-bordered>thead>tr>th, .table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>th, .table-bordered>thead>tr>td, .table-bordered>tbody>tr>td, .table-bordered>tfoot>tr>td {
+    border:0 !important;
+}
+.table-bordered {
+    border: 0 !important;
+ }
+.dots
+{
+     float: right;
+}
+	
+td.ms-cellstyle.ms-vb-title {
+    min-width: 175px;
+}
+ 
+input[type=button]
+{
+	min-height:30px;
+}
+ #textbox, .button {
+	 margin: 0px;
+ margin-bottom: 5px;
+ }
