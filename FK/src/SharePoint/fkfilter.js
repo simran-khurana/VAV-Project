@@ -1,10 +1,11 @@
 var siteUrl = '/sites/MySiteCollection';
-var baseFilter = "/_api/Web/Lists/getbytitle('MigrateDoclibrary')/items?$select=FileRef, FileLeafRef, ID,Modified,Editor/Title,FacilityName/ID, FacilityName/Title,FileFormat/Title,FileFormat/ID,DocumentType/Title,DocumentType/ID,FacilityType/Title,FacilityType/ID";
+var baseFilter = "/_api/Web/Lists/getbytitle('"+FKLISTNAME+"')/items?$select=FileRef, FileLeafRef, ID,Modified,Editor/Title,FacilityName/ID, FacilityName/Title,FileFormat/Title,FileFormat/ID,DocumentType/Title,DocumentType/ID,FacilityType/Title,FacilityType/ID";
 var expandExpression = "&$expand=FacilityName/ID,FileFormat/ID, DocumentType/ID, FacilityType/ID,Editor/ID";
 var baseFilterExpression = "&$filter=";
 var filterExpression = "";
 var filtertokens = [];
-
+var itemSearch=[];
+var facilityNamesList=[];
 var myMap = new Map();
 myMap.set("DocumentTypes", "DocumentType/ID");
 myMap.set("FileFormats", "FileFormat/ID");
@@ -24,7 +25,7 @@ var selectHtml = "";
 	  {
 	  	selectHtml += "<p id='form_output'></p>";
   	 	selectHtml += "<form id=\"filterform\" action=\"form_action.asp\">";
-
+       selectHtml += "<div class='row'>"; 
 	    var ctx = new SP.ClientContext();
 	    var site = ctx.get_site();
 	    ctx.load(site);
@@ -42,9 +43,10 @@ var selectHtml = "";
 					    		dfd.done(function(){
 					    			selectHtml += '';
 									selectHtml += "</form>";
+									 selectHtml += "</div>"; 
 									$("#fk").append(selectHtml);
 									handleSubmit();
-									//docFilter();
+									handleSearch();
 					    		});
 								dfd.fail(function(){alert("Failed retrieving FacilityTypes");});
 							}
@@ -65,17 +67,17 @@ var selectHtml = "";
 	  }
 
 	
-    $(document).ready(function () {
 
-    });
     
 	function handleSubmit()
-	{
-		
-		$(".filters").change(function() {
+	{		
+		$(".filters").change(function() {
+			$(".doccontainer").attr('style','display:none');
+			$(".sortable").find("tbody tr").remove(); 
+			//$(".button").show();
+			//$("#textbox").attr('style','width:90px').val('');
 			filtertokens = [];    
 			var filterBoxes=$(".filterbox");
-			
 			
 			for(var i=0;i<filterBoxes.length;i++){
 				var box=filterBoxes[i];
@@ -93,6 +95,7 @@ var selectHtml = "";
 							});	
 						}
 					}
+					
 					filtertokens.push(
 				{
 					filterid: boxName,
@@ -101,14 +104,13 @@ var selectHtml = "";
 				}
 				
 			}
-			console.log(filtertokens)
+			
 			
 			var queryFilter=AssembleFilter2(filtertokens);
 			if(queryFilter!=''){
 					var facilityFilterExpression = siteUrl + baseFilter + expandExpression + queryFilter;
-					console.log(facilityFilterExpression);
-					document.getElementById("stations").innerHTML = "";
-			//performSearch(fullFilterExpression, displayDocuments);
+					
+					
 			getFacilityNames(facilityFilterExpression, displayFacilities);  
 			}
 			else
@@ -120,12 +122,43 @@ var selectHtml = "";
 		}); 
 		
 	}
+	
+	function handleSearch(){
+		 var txtBox=$("#textbox");
+	     
+		 $("#textbox").keypress(function() {
+			$("#textbox").autocomplete({
+			source: itemSearch,
+			select : function (event, ui) {
+			console.log(ui.item.label);
+			}
+			});
+		});
+		
+		$("#searchClick").click(function(){
+			var facilityName=$("#textbox").val();
+			console.log(facilityName);
+			$("#facilitites").html('');
+		   var searchedName = jQuery.grep(facilityNamesList, function( fname) {
+			  return ( fname.ft==facilityName );
+			});
+			if(searchedName.length>0)
+			{
+			console.log(searchedName[0].id +"--"+searchedName[0].ft); 
+			
+			document.getElementById("facilitites").innerHTML += "<div class ='facility'><input id='"+searchedName[0].id+"' class='docfilter' checked='true' onchange='docFilter()' type='checkbox' /><span class ='facdisp'>" + searchedName[0].ft+"</span></div>";
+	        docFilter();
+			$(".button").hide();
+			$("#textbox").attr('style','width:180px');
+			}
+	});
+	}
 function docFilter()
 	{
+		$(".doccontainer").attr('style','display:none');
 		$(".sortable").find("tbody tr").remove(); 
-		//$(".docfilter").change(function() {
-			    
-			var filterBoxes=$(".docfilter");
+		
+		var filterBoxes=$(".docfilter");
 			
         	var items = [];
 			for (index =  0 ; index<filtertokens.length;index++)
@@ -135,9 +168,8 @@ function docFilter()
 				filtertokens.splice(index, 1);
 		    }
 		    }
-					//var boxInputs=$(box).find('.filters');
-					for(j=0;j<filterBoxes.length;j++){
-						if(filterBoxes[j].checked){
+				for(j=0;j<filterBoxes.length;j++){
+				if(filterBoxes[j].checked){
 							var itemValue=$(filterBoxes[j]).attr('id');
 							items.push(
 							{
@@ -145,28 +177,27 @@ function docFilter()
 							});	
 						}
 					}
-					if(items.length == 0)
-					{
-						document.getElementById("stations").innerHTML = "";
-					}
+					
 					filtertokens.push(
 				{
 					filterid: "FacilityNames",
 					items: items
 				});	 
-				
-				
-			
-			console.log(filtertokens)
-			
-				
-			var docFilterExpression = siteUrl + baseFilter + expandExpression + AssembleFilter2(filtertokens);
-console.log(docFilterExpression);
+				if(items.length!=0)
+				{
+					var docFilterExpression = siteUrl + baseFilter + expandExpression + AssembleFilter2(filtertokens);
+
 			performSearch(docFilterExpression, displayDocuments);
 			
-			//getFacilityNames(fullFilterExpression, displayFacilities);  
-		//}); 
-		
+			
+		$(".doccontainer").attr('style','display:block');
+				}
+				else
+				{
+					$(".doccontainer").attr('style','display:none');
+		            $(".sortable").find("tbody tr").remove(); 
+				}
+				
 	}
 function AssembleFilter2(filterTokens)
 {
@@ -254,9 +285,9 @@ function onQuerySucceeded(dfd, collListItem, filterOperator ) {
 	        
 
 		if(filterOperator=="FacilityTypes"){
-					 var vannDiv ="<div class ='label' ><label>Vann</label><br/><br/><div name='"+filterOperator+"'  class='VANN filterbox'>";
+					 var vannDiv ="<div class='labelHead' ><label>Vann</label><br/><br/><div name='"+filterOperator+"'  class='VANN filterbox'>";
 					 vannDiv += "<img class= 'image'  src='/sites/vavdev/SiteAssets/Images/VANN.PNG'  /></br>";
-	var AvlopDiv = "<div class ='label' ><label>AvlØp</label><br/><br/><div name='"+filterOperator+"'  class='AVLØP filterbox'>";
+	var AvlopDiv = "<div class='labelHead' ><label>AvlØp</label><br/><br/><div name='"+filterOperator+"'  class='AVLØP filterbox'>";
 	AvlopDiv += "<img class= 'image' src='/sites/vavdev/SiteAssets/Images/AVLOP.PNG'  /></br>";
 	
 
@@ -296,7 +327,7 @@ else if(filterOperator=="FileFormats"){
 	heading = "Format";
 	imgSrc = "/sites/vavdev/SiteAssets/Images/Format.PNG";
 }
-selectHtml+="<div class ='label'><label>"+heading+"</label><br/><br/><div name='"+filterOperator+"' class='"+filterOperator+" filterbox'>";
+selectHtml+="<div class='labelHead'><label>"+heading+"</label><br/><br/><div name='"+filterOperator+"' class='"+filterOperator+" filterbox'>";
 selectHtml += "<img class= 'image'  src='"+imgSrc+"'  /></br>";
 
 if(filterOperator!="FacilityNames"){
@@ -307,12 +338,28 @@ if(filterOperator!="FacilityNames"){
     }
 }
 else if(filterOperator=="FacilityNames"){
-	selectHtml +="<br/><input id='textbox' class='filters' type = 'text'><input class='button'  type = 'button' value = 'Søk'>"
+	
+	 while (listItemEnumerator.moveNext()) {
+	 var oListItem = listItemEnumerator.current;	
+	 itemSearch.push(oListItem.get_item('Title'));	
+	 
+	  facilityNamesList.push(
+					{
+					ft: oListItem.get_item('Title'),
+					id: oListItem.get_id()
+					});	
+   
+
+	 }
+	selectHtml +="<br/><input id='textbox' class='filters' type = 'text'><input class='button' id='searchClick' type = 'button' value = 'Søk'>"
+	
 }
 	 selectHtml += "</div></div>"; 
 		}
+		 
 dfd.resolve();
 }
+
 
 function onQueryFailed(sender, args) {
 
@@ -322,4 +369,5 @@ function onQueryFailed(sender, args) {
 
 $(function(){
   $('#keywords').tablesorter(); 
+ 
 });
