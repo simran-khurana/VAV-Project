@@ -76,6 +76,9 @@ function groupBy(items, propertyId, propertyValue)
     return result;
 }
 
+
+//var linkString = "<a id=\"CallOutExample\" onclick=\"OpenItemFilePreviewCallOut(this, 'My Title','"+FKSITEURL+"_layouts/15/WopiFrame2.aspx?sourcedoc=/sites/vavdev/"+MigrateDoclibrary+"/1028template.docx', 66, '/sites/vavdev/MigrateDoclibrary/1028template.docx', '{98E4CF0C-AF45-4258-9CA7-E8FAA3585D2A}')\" title=\"CallOut With File Preview\" h ref=\"#\">Call Out with File Preview</a>";
+
 var docLink="https://evrydev.sharepoint.com/sites/vavdev/_layouts/15/WopiFrame.aspx?sourcedoc=%7B9CFEB957-E3FB-4C7F-8509-FA54A1D96DF4%7D&file=1.%20Samsvarserkl%C3%A6ring-test%20document4.docx&action=default";
 
 var replaceLinkString = "<a id=\"CallOutExample\" href='/sites/vavdev/_layouts/15/WopiFrame.aspx?sourcedoc=/sites/vavdev/MigrateDoclibrary/_FileLeafRef_&action=default'  title=\"_FileLeafRef_\">_FileLeafRef_</a>";
@@ -97,13 +100,14 @@ function getChildByTagName(node, tagName)
 
 function getChildByTagNameAndAttrValue(node, tagName, attrName, attrValue)
 {
-	for (const el of node.getElementsByTagName(tagName))
+	var tagElement=node.getElementsByTagName(tagName);
+	for (var el in tagElement)
 	{
-		var attr = el.getAttribute(attrName);
+		var attr = tagElement[el].getAttribute(attrName);
 		if (attr != null)
 		{
 			if (attr == attrValue)
-				return el;
+				return tagElement[el];
 		}
 	}
 	return null;
@@ -112,33 +116,42 @@ function getChildByTagNameAndAttrValue(node, tagName, attrName, attrValue)
 function myFunction(xml) {
 	var count = xml.childNodes[0].childNodes.length;
 	var items = [];
+	
+	
+	
+	
 	for(var i = 0;i < count;i++)
 	{
 		var entryNode = xml.childNodes[0].childNodes[i];
 		if (entryNode.nodeName == "entry")
 		{
 			var contentNode = getChildByTagName(entryNode, "content");
-			var FacilityNamePropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "FacilityName").getElementsByTagName("properties")[0];
-			var FileFormatPropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "FileFormat").getElementsByTagName("properties")[0];
-			var DocumentTypePropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "DocumentType").getElementsByTagName("properties")[0];
-			var FacilityTypePropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "FacilityType").getElementsByTagName("properties")[0];
-			var ModifiedByPropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "Editor").getElementsByTagName("properties")[0];
+			
+			//getElementsByTagName("properties")[0];
+			var FacilityNamePropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "FacilityName").childNodes[0].childNodes[0].childNodes[5].childNodes[0];
+			var FileFormatPropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "FileFormat").childNodes[0].childNodes[0].childNodes[5].childNodes[0];
+			var DocumentTypePropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "DocumentType").childNodes[0].childNodes[0].childNodes[5].childNodes[0];
+			var FacilityTypePropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "FacilityType").childNodes[0].childNodes[0].childNodes[5].childNodes[0];
+			var ModifiedByPropertiesNode = getChildByTagNameAndAttrValue(entryNode, "link", "title", "Editor").childNodes[0].childNodes[0].childNodes[5].childNodes[0];
+			
+			// console.log(contentNode);
+			//console.log(contentNode.childNodes[0].childNodes[1].innerHTML);
+		
 			items.push(
 			{
-				FileRef: contentNode.getElementsByTagName("properties")[0].getElementsByTagName("FileRef")[0].innerHTML,
-				FileLeafRef: contentNode.getElementsByTagName("properties")[0].getElementsByTagName("FileLeafRef")[0].innerHTML,
-				Id: contentNode.getElementsByTagName("properties")[0].getElementsByTagName("Id")[0].innerHTML,
-				ModifiedDate: contentNode.getElementsByTagName("properties")[0].getElementsByTagName("Modified")[0].innerHTML,
-				
-				FacilityNameID: FacilityNamePropertiesNode.getElementsByTagName("ID")[0].innerHTML,
-				FacilityName: FacilityNamePropertiesNode.getElementsByTagName("Title")[0].innerHTML,
-				FileFormat:FileFormatPropertiesNode.getElementsByTagName("Title")[0].innerHTML,
-				FileFormatID:FileFormatPropertiesNode.getElementsByTagName("ID")[0].innerHTML,
-				DocumentType:DocumentTypePropertiesNode.getElementsByTagName("Title")[0].innerHTML,
-				DocumentTypeID :DocumentTypePropertiesNode.getElementsByTagName("ID")[0].innerHTML,
-				FacilityType:FacilityTypePropertiesNode.getElementsByTagName("Title")[0].innerHTML,
-				FacilityTypeID:FacilityTypePropertiesNode.getElementsByTagName("ID")[0].innerHTML,
-				ModifiedBy:ModifiedByPropertiesNode.getElementsByTagName("Title")[0].innerHTML,
+				FileRef: contentNode.childNodes[0].childNodes[4].textContent,
+				FileLeafRef: contentNode.childNodes[0].childNodes[1].textContent,
+				Id: contentNode.childNodes[0].childNodes[0].textContent,
+				ModifiedDate: contentNode.childNodes[0].childNodes[3].textContent,
+				FacilityNameID: FacilityNamePropertiesNode.childNodes[0].textContent,
+				FacilityName: FacilityNamePropertiesNode.childNodes[1].textContent,
+				FileFormat:FileFormatPropertiesNode.childNodes[0].textContent,
+				FileFormatID:FileFormatPropertiesNode.childNodes[1].textContent,
+				DocumentType:DocumentTypePropertiesNode.childNodes[0].textContent,
+				DocumentTypeID :DocumentTypePropertiesNode.childNodes[1].textContent,
+				FacilityType:FacilityTypePropertiesNode.childNodes[0].textContent,
+				FacilityTypeID:FacilityTypePropertiesNode.childNodes[1].textContent,
+				ModifiedBy:ModifiedByPropertiesNode.childNodes[0].textContent,
 			});
 		}
 	}
@@ -174,7 +187,8 @@ console.log(items.length);
 					"<td class='ms-cellstyle ms-vb2 doc-style' data-value='"+items[i].FacilityName+"'>"+items[i].FacilityName+"</td></tr>";
 		$(".sortable tbody").append(rowHTML);
 		
-		
+		$('.loader').fadeOut();	
+        $('.overlay').fadeOut();	
 		
 	}
 }
@@ -188,9 +202,9 @@ function displayFacilities(items)
 		document.getElementById("facilitites").innerHTML += "<div class ='facility'><input id='"+items[i]["propertyName"]+"' class='docfilter' onchange='docFilter()' type='checkbox' /><span class ='facdisp'>" + items[i]["propertyValue"]+"</span></div>";
 		document.getElementById("facilitites").innerHTML += "<br/>";
 	}
-	
+	$('.loader').fadeOut();	
+    $('.overlay').fadeOut();
 		
 }
-
 
 

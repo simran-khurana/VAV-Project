@@ -6,12 +6,19 @@ var filterExpression = "";
 var filtertokens = [];
 var itemSearch=[];
 var facilityNamesList=[];
-var myMap = new Map();
-myMap.set("DocumentTypes", "DocumentType/ID");
-myMap.set("FileFormats", "FileFormat/ID");
-myMap.set("FacilityNames", "FacilityName/ID");
-myMap.set("FacilityTypes", "FacilityType/ID");
+var facilityName ="";
+// var myMap = new Map();
+// myMap.set("DocumentTypes", "DocumentType/ID");
+// myMap.set("FileFormats", "FileFormat/ID");
+// myMap.set("FacilityNames", "FacilityName/ID");
+// myMap.set("FacilityTypes", "FacilityType/ID");
 
+// var mappedArray=[{'DocumentTypes':'DocumentType/ID'},
+					// {'FileFormats':'FileFormats'},
+					// {'FacilityNames':'FacilityNames'},
+					// {'FacilityTypes':'FacilityTypes'}];
+
+var mappedArray = {"DocumentTypes":"DocumentType/ID","FileFormats":"FileFormat/ID","FacilityNames":"FacilityName/ID","FacilityTypes" :"FacilityType/ID"};
 
 var selectHtml = "";
 
@@ -23,6 +30,7 @@ var selectHtml = "";
 	//SP-script loaded, do init operations
 	function GetSiteUrl()
 	  {
+	   
 	  	selectHtml += "<p id='form_output'></p>";
   	 	selectHtml += "<form id=\"filterform\" action=\"form_action.asp\">";
        selectHtml += "<div class='row'>"; 
@@ -67,15 +75,11 @@ var selectHtml = "";
 	  }
 
 	
-
-    
-	function handleSubmit()
-	{		
-		$(".filters").change(function() {
-			$(".doccontainer").attr('style','display:none');
+function handleFilters()
+{
+	
+           $(".doccontainer").attr('style','display:none');
 			$(".sortable").find("tbody tr").remove(); 
-			//$(".button").show();
-			//$("#textbox").attr('style','width:90px').val('');
 			filtertokens = [];    
 			var filterBoxes=$(".filterbox");
 			
@@ -95,69 +99,107 @@ var selectHtml = "";
 							});	
 						}
 					}
-					
-					filtertokens.push(
+			}	
+else
+{
+	
+	if(facilityName !=""){
+	 var facNameSearch = jQuery.grep(facilityNamesList, function( fname) {
+			  return ( fname.ft==facilityName );
+			});
+	itemValue = facNameSearch[0].id
+	items.push(
+							{
+								item: itemValue
+							});	
+	
+	
+}	
+			}
+	filtertokens.push(
 				{
 					filterid: boxName,
 					items: items
-				});	 
+				});
 				}
-				
-			}
-			
-			
-			var queryFilter=AssembleFilter2(filtertokens);
+				var queryFilter=AssembleFilter2(filtertokens);
 			if(queryFilter!=''){
+				$(".overlay").show();
+			$('.loader').attr('style','display:inline !important');
 					var facilityFilterExpression = siteUrl + baseFilter + expandExpression + queryFilter;
 					
-					
-			getFacilityNames(facilityFilterExpression, displayFacilities);  
+					console.log("facility filter "+ facilityFilterExpression);
+			getFacilityNames(facilityFilterExpression, displayFacilities);
+          	   
+			if(facilityName!= "")
+			{
+				$(".docfilter").attr("checked","true");
+				docFilter();
+			}
 			}
 			else
 			{
 				document.getElementById("facilitites").innerHTML = "";
 			}
 				
-		
+}
+    
+	function handleSubmit()
+	{		
+		$(".filters").change(function() {
+			handleFilters();
 		}); 
 		
 	}
-	
 	function handleSearch(){
-		 var txtBox=$("#textbox");
-	     
 		 $("#textbox").keypress(function() {
 			$("#textbox").autocomplete({
 			source: itemSearch,
 			select : function (event, ui) {
-			console.log(ui.item.label);
+			
 			}
 			});
 		});
-		
+		$("#textbox").focusin(function() { 
+		$(".button").show();
+        $("#textbox").attr('style','width:90px').val('');
+        $("#facilitites").html('');
+        $(".doccontainer").attr('style','display:none');
+		$(".sortable").find("tbody tr").remove(); 
+  
+  });
+		$("#textbox").focusout(function() { 
+		facilityName = $("#textbox").val();
+		if(facilityName == "")
+		{
+			handleFilters();
+		}
+		});
 		$("#searchClick").click(function(){
-			var facilityName=$("#textbox").val();
-			console.log(facilityName);
+			 facilityName= $("#textbox").val();
+			
 			$("#facilitites").html('');
 		   var searchedName = jQuery.grep(facilityNamesList, function( fname) {
 			  return ( fname.ft==facilityName );
 			});
 			if(searchedName.length>0)
 			{
-			console.log(searchedName[0].id +"--"+searchedName[0].ft); 
+			
 			
 			document.getElementById("facilitites").innerHTML += "<div class ='facility'><input id='"+searchedName[0].id+"' class='docfilter' checked='true' onchange='docFilter()' type='checkbox' /><span class ='facdisp'>" + searchedName[0].ft+"</span></div>";
 	        docFilter();
 			$(".button").hide();
 			$("#textbox").attr('style','width:180px');
+		
 			}
 	});
 	}
+	// filter applied for displaying documents 
 function docFilter()
 	{
+		
 		$(".doccontainer").attr('style','display:none');
 		$(".sortable").find("tbody tr").remove(); 
-		
 		var filterBoxes=$(".docfilter");
 			
         	var items = [];
@@ -185,12 +227,13 @@ function docFilter()
 				});	 
 				if(items.length!=0)
 				{
+					$(".overlay").show();
+			$('.loader').attr('style','display:inline !important');
 					var docFilterExpression = siteUrl + baseFilter + expandExpression + AssembleFilter2(filtertokens);
-
+console.log("doc filter "+docFilterExpression);
 			performSearch(docFilterExpression, displayDocuments);
-			
-			
-		$(".doccontainer").attr('style','display:block');
+			$(".doccontainer").attr('style','display:block');
+			 
 				}
 				else
 				{
@@ -204,9 +247,13 @@ function AssembleFilter2(filterTokens)
 	var filtersAnd = [];
 	var filtersOr = [];
     var facTypeCount = 0;
-	for (const token of filterTokens) {
-  		var filterKey = myMap.get(token.filterid);
-  		if (token.items.length > 0)
+	for (var token  in filterTokens) {
+		
+		var filterKey=mappedArray[filterTokens[token].filterid];
+		
+  		//var filterKey = myMap.get(filterTokens[token].filterid);
+		
+		if (filterTokens[token].items.length > 0)
   		{
 			if(filterKey == "FacilityType/ID")
 			{
@@ -225,8 +272,8 @@ function AssembleFilter2(filterTokens)
 				filtersOr = [];
 			}
 			
-			for (const item of token.items) {
-				filtersOr.push(filterKey + " eq '" + item.item + "'");
+			for(var item in filterTokens[token].items) {
+				filtersOr.push(filterKey + " eq '" + filterTokens[token].items[item].item + "'");
   			}
   			filtersAnd.push(filtersOr);
   		}
@@ -244,13 +291,11 @@ filterExpression = baseFilterExpression;
 		{
 			if (i > 0)
 				filterExpression += " and ";
-			
-			
-			filterExpression += "(";
+			    filterExpression += "(";
 			for (j = 0;j < filtersAnd[i].length;j++)
 			{
 				if (j > 0)
-					filterExpression += " or ";
+				filterExpression += " or ";
 				filterExpression += "(" + filtersAnd[i][j] + ")";	
 			}
 			filterExpression += ")";
@@ -342,8 +387,7 @@ else if(filterOperator=="FacilityNames"){
 	 while (listItemEnumerator.moveNext()) {
 	 var oListItem = listItemEnumerator.current;	
 	 itemSearch.push(oListItem.get_item('Title'));	
-	 
-	  facilityNamesList.push(
+	 facilityNamesList.push(
 					{
 					ft: oListItem.get_item('Title'),
 					id: oListItem.get_id()
@@ -356,18 +400,11 @@ else if(filterOperator=="FacilityNames"){
 }
 	 selectHtml += "</div></div>"; 
 		}
-		 
-dfd.resolve();
+		dfd.resolve();
 }
-
-
 function onQueryFailed(sender, args) {
-
-    alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
+ alert('Request failed. ' + args.get_message() + '\n' + args.get_stackTrace());
 }
-
-
 $(function(){
   $('#keywords').tablesorter(); 
- 
-});
+ });
